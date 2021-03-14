@@ -1,0 +1,23 @@
+{
+  "name": "parser",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "needle": "^2.4.0",
+    "tress": "^1.1.4"
+  },
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "jquery": "^3.6.0",
+    "jsdom": "^15.2.1",
+    "request": "^2.88.0"
+  },
+  "scripts": {
+    "start": "node index"
+  },
+  "keywords": [],
+  "author": "getcode.xyz",
+  "license": "free"
+}

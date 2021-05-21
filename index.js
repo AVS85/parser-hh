@@ -12,11 +12,13 @@ var fs = require('fs');
 var uniq_links = []; // добавляем линки для проверки их уникальности
 var cntTagetPages = 0
 var countUniqLinks = 0
-// let search_text = ' Менеджер+по+проекту'
 // var URL = `https://hh.ru/search/vacancy?clusters=true&enable_snippets=true&text=${search_text}&page=0`;
 
-var URL = `https://hh.ru/search/vacancy?area=1&clusters=true&enable_snippets=true&text=%D0%9C%D0%B0%D1%80%D0%BA%D0%B5%D1%82%D0%BE%D0%BB%D0%BE%D0%B3&page=0`;
+let search_text = 'Менеджер ресторана'
 
+var URL = `https://hh.ru/search/vacancy?clusters=true&enable_snippets=true&text=${encodeURIComponent(search_text)}&L_save_area=true&area=1&showClusters=true&page=0`;
+
+console.log(URL);
 
 var results = [];
 var res_skills = [];
@@ -25,26 +27,28 @@ var link_crawler = [];
 console.log(`*********************************************`)
 
 var q = tress(function(url, callback){
-    // `tress` последовательно вызывает обработчик для каждой ссылки в очереди
+    // `tress` последовательно вызывает задания в очереди
 
-    //* по url получаем DOM страницы
+    // по url получаем DOM страницы
     needle.get(url, function(err, res){
         if (err) throw err;
 
         var $ = cheerio.load(res.body)
 
-        //* находим в res.body ссылки на внутренние страницы -> пушим их в очередь q
-        var nextPage = $('.bloko-link.HH-LinkModifier')
-        
+        // находим в res.body ссылки на внутренние страницы -> пушим их в очередь q
+        var targetPages = $('.vacancy-serp-wrapper .g-user-content a.bloko-link')
+        // console.log('targetPages', targetPages?.length)
+
         // если ссылки внутренние страницы найдены ->
-        if ( nextPage.length > 0 ) {
-            console.log('ссылок на внутр страницы: ', nextPage.length)
-            nextPage.each(function(i, item) {
-                // console.log('**********', item )
-                link_crawler.push( item.children[0].data )
+        if ( targetPages.length > 0 ) {
+            console.log('ссылок на внутр страницы: ', targetPages.length)
+            targetPages.each(function(i, item) {
+                console.log('**********', item.attribs.href )
+                // link_crawler.push( item.children[0].data )
                 // link_crawler.push( { href: item.attribs.href, title: item.children[0].data, } )
                 q.push(resolve(URL, $(this).attr('href')))  // приводим относительный адрес ссылки к абсолютному
             });
+            
             // (function(){
             //     require('fs').writeFileSync('./link_crawler.json', JSON.stringify(link_crawler, null, 4));
             // })()
@@ -96,27 +100,25 @@ var q = tress(function(url, callback){
         callback()
     });
 
-}, 10); // запускаем N параллельных потоков
+}, 12); // запускаем N параллельных потоков
 
-// эта функция выполнится, когда в очереди закончатся ссылки
+
+
+// // Drain выполнится после выполнения последнего задания в очереди
 q.drain = function(){
-    // require('fs').writeFileSync('./data.json', JSON.stringify(res_skills, null, 4));
-
-
-    converter.json2csv(res_skills, (err, csv) => {
-        if (err) {
-            console.log('err converter');
-            throw err;
-        }
-            // print CSV string
-            // console.log(csv);
-
-            // write CSV to a file
-        fs.writeFileSync('todos.csv', csv);
-    }, options = {
-        excelBOM: true
-    });
-}
+    require('fs').writeFileSync(`./result/${search_text}.json`, JSON.stringify(res_skills, null, 4));
+    // converter.json2csv(res_skills, (err, csv) => {
+    //     if (err) {
+    //         console.log('err converter');
+    //         throw err;
+    //     }
+            
+    //     fs.writeFileSync('todos.csv', csv); // write CSV to a file
+    //     }, options = { 
+    //         excelBOM: true 
+    //     }
+    // );
+};
 
 // добавляем в очередь ссылку на первую страницу списка
 q.push(URL)
